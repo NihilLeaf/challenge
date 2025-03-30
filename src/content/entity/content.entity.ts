@@ -7,8 +7,11 @@ import {
   DeleteDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToOne,
 } from 'typeorm'
 import { Company } from 'src/company/entity'
+import contentTypeEnum from 'src/content/utils/enum/contentType.enum'
+import { TextContent } from 'src/content/entity/textContent.entity'
 
 @Entity('contents')
 export class Content {
@@ -19,7 +22,7 @@ export class Content {
   title: string
 
   @Column()
-  type: string
+  type: contentTypeEnum | string
 
   @Column()
   description?: string
@@ -42,7 +45,17 @@ export class Content {
   @DeleteDateColumn()
   deleted_at: Date | null
 
+  @Column()
+  company_id?: string
+
   @ManyToOne(() => Company, (company) => company.contents)
   @JoinColumn({ name: 'company_id' })
   company: Company
+
+  @Column()
+  text_content_id?: string
+
+  @OneToOne(() => TextContent, (text_content) => text_content.content)
+  @JoinColumn({ name: 'text_content_id' })
+  text_content?: TextContent
 }

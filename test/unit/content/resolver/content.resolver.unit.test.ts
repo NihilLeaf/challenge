@@ -3,15 +3,14 @@ import { suite, test } from '@testdeck/jest'
 import { ContentResolver } from 'src/content/resolver'
 import { ContentService } from 'src/content/service'
 import { ProvisionDto } from 'src/content/dto'
-import { ExecutionContext, Logger } from '@nestjs/common'
-import { GqlExecutionContext } from '@nestjs/graphql'
-import { AuthService } from 'src/user/service'
-import { UserRepository } from 'src/user/repository'
+import { Logger } from '@nestjs/common'
+import { AuthGuard } from 'src/user/guard'
 
 @suite
 export class ContentResolverUnitTest {
   private contentResolver: ContentResolver
   private contentService: ContentService
+
   private readonly mockProvisionDto: ProvisionDto = {
     id: '4372ebd1-2ee8-4501-9ed5-549df46d0eb0',
     title: 'Sample Content',
@@ -31,13 +30,6 @@ export class ContentResolverUnitTest {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ContentResolver,
-        AuthService,
-        {
-          provide: UserRepository,
-          useValue: {
-            findById: jest.fn(),
-          },
-        },
         {
           provide: ContentService,
           useValue: {
@@ -45,79 +37,65 @@ export class ContentResolverUnitTest {
           },
         },
       ],
-    }).compile()
+    })
+      .overrideGuard(AuthGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) })
+      .compile()
 
     this.contentResolver = module.get<ContentResolver>(ContentResolver)
     this.contentService = module.get<ContentService>(ContentService)
-  }
-
-  private createMockContext(): ExecutionContext {
-    return {
-      switchToHttp: jest.fn(),
-      switchToRpc: jest.fn(),
-      switchToWs: jest.fn(),
-      getHandler: jest.fn(),
-      getClass: jest.fn(),
-      getType: jest.fn(),
-    } as unknown as ExecutionContext
-  }
-
-  private createGqlExecutionContext(userId?: string): GqlExecutionContext {
-    return {
-      getContext: jest.fn().mockReturnValue({
-        req: {
-          user: { id: userId || 'default-user-id' },
-        },
-      }),
-    } as unknown as GqlExecutionContext
   }
 
   @test
   async '[provision] Should return provisioned content for valid request'() {
     jest.spyOn(this.contentService, 'provision').mockResolvedValue(this.mockProvisionDto)
 
-    const gqlContext = this.createGqlExecutionContext('valid-user-id')
-    jest.spyOn(GqlExecutionContext, 'create').mockReturnValue(gqlContext)
+    const req = {
+      user: {
+        id: 'valid-user-id',
+        company: { id: 'valid-company-id' },
+      },
+    }
 
-    const result = await this.contentResolver.provision(
-      '4372ebd1-2ee8-4501-9ed5-549df46d0eb0',
-      gqlContext.getContext().req,
-    )
+    const result = await this.contentResolver.provision('4372ebd1-2ee8-4501-9ed5-549df46d0eb0', req)
 
     expect(result).toStrictEqual(this.mockProvisionDto)
     expect(this.contentService.provision).toHaveBeenCalledWith(
       '4372ebd1-2ee8-4501-9ed5-549df46d0eb0',
+      'valid-company-id',
     )
   }
 
   @test
   async '[provision] Should log provisioning request'() {
     const loggerSpy = jest.spyOn(Logger.prototype, 'log')
-
     jest.spyOn(this.contentService, 'provision').mockResolvedValue(this.mockProvisionDto)
 
-    const gqlContext = this.createGqlExecutionContext('valid-user-id')
-    jest.spyOn(GqlExecutionContext, 'create').mockReturnValue(gqlContext)
+    const req = {
+      user: {
+        id: 'valid-user-id',
+        company: { id: 'valid-company-id' },
+      },
+    }
 
-    await this.contentResolver.provision(
-      '4372ebd1-2ee8-4501-9ed5-549df46d0eb0',
-      gqlContext.getContext().req,
-    )
+    await this.contentResolver.provision('4372ebd1-2ee8-4501-9ed5-549df46d0eb0', req)
 
     expect(loggerSpy).toHaveBeenCalledWith(
-      `Provisioning content=4372ebd1-2ee8-4501-9ed5-549df46d0eb0 to user=valid-user-id`,
+      `Provisioning content=4372ebd1-2ee8-4501-9ed5-549df46d0eb0 to user=valid-user-id and company=valid-company-id`,
     )
   }
 
   @test
-  async '[provision] Should throw error if content service fails'() {
-    jest.spyOn(this.contentService, 'provision').mockRejectedValue(new Error('Service failed'))
-
-    const gqlContext = this.createGqlExecutionContext('valid-user-id')
-    jest.spyOn(GqlExecutionContext, 'create').mockReturnValue(gqlContext)
+  async '[provision] Should throw error if company ID is missing'() {
+    const req = {
+      user: {
+        id: 'valid-user-id',
+        company: undefined,
+      },
+    }
 
     await expect(
-      this.contentResolver.provision('invalid-content-id', gqlContext.getContext().req),
-    ).rejects.toThrow('Service failed')
+      this.contentResolver.provision('4372ebd1-2ee8-4501-9ed5-549df46d0eb0', req),
+    ).rejects.toThrow('User ID or Company ID is missing in the context')
   }
 }

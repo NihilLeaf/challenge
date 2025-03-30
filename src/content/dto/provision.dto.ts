@@ -41,4 +41,7 @@ export class ProvisionDto {
 
   @Field(() => GraphQLJSONObject)
   metadata: object
+
+  @Field(() => String, { nullable: true })
+  textContent?: string | null
 }

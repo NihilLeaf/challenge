@@ -10,13 +10,14 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "prepare": "husky",
-    "start:dev": "NODE_PATH=. nest start --watch",
-    "db:create_migration": "NODE_PATH=. typeorm migration:create src/database/migration/$npm_config_name",
-    "db:migrate": "NODE_ENV=development NODE_PATH=. npm run build && typeorm migration:run -d dist/database/data-source.database.js",
-    "db:seed": "NODE_PATH=. ts-node test/seed.ts",
-    "db:drop": "NODE_ENV=development NODE_PATH=. npm run build && typeorm schema:drop -d dist/database/data-source.database.js",
+    "start:dev": "cross-env NODE_PATH=. nest start --watch",
+    "db:create_migration": "cross-env-shell NODE_PATH=. typeorm migration:create src/database/migration/$npm_config_name",
+    "db:migrate": "cross-env NODE_ENV=development NODE_PATH=. npm run build && typeorm migration:run -d dist/database/data-source.database.js",
+    "db:seed": "cross-env NODE_PATH=. ts-node test/seed.ts",
+    "db:seedTextContent": "cross-env NODE_ENV=development NODE_PATH=. ts-node test/text-seed.ts",
+    "db:drop": "cross-env NODE_ENV=development NODE_PATH=. npm run build && typeorm schema:drop -d dist/database/data-source.database.js",
     "lint": "eslint .",
-    "test": "NODE_PATH=. jest"
+    "test": "cross-env NODE_PATH=. jest"
   },
   "dependencies": {
     "@nestjs/apollo": "^13.0.2",
@@ -49,6 +50,7 @@
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
     "@typescript-eslint/parser": "^8.21.0",
+    "cross-env": "^7.0.3",
     "eslint": "^9.19.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-json-format": "^2.0.1",

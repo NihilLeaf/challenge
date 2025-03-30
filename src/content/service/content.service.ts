@@ -1,138 +1,104 @@
 import * as fs from 'fs'
-import * as path from 'path'
 import {
-  BadRequestException,
   Injectable,
   Logger,
-  NotFoundException,
   UnprocessableEntityException,
+  BadRequestException,
+  NotFoundException,
 } from '@nestjs/common'
 import { ContentRepository } from 'src/content/repository'
 import { ProvisionDto } from 'src/content/dto'
+import { ContentFactory } from 'src/content/utils/factory/content'
+import * as crypto from 'crypto'
+import * as path from 'path'
+import { contentTypeEnumList } from 'src/content/utils/enum/contentType.enum'
 
 @Injectable()
 export class ContentService {
+  private readonly ONE_HOUR_IN_SECONDS = 3600
   private readonly logger = new Logger(ContentService.name)
-  private readonly expirationTime = 3600 // 1 hour
+  private readonly expirationTime = this.ONE_HOUR_IN_SECONDS
 
   constructor(private readonly contentRepository: ContentRepository) {}
 
-  async provision(contentId: string): Promise<ProvisionDto> {
+  async provision(contentId: string, companyId: string): Promise<ProvisionDto> {
     if (!contentId) {
-      this.logger.error(`Invalid Content ID: ${contentId}`)
-      throw new UnprocessableEntityException(`Content ID is invalid: ${contentId}`)
+      this.logger.error(`Content ID is missing`)
+      throw new UnprocessableEntityException('Content ID is required')
     }
 
-    this.logger.log(`Provisioning content for id=${contentId}`)
-    let content
+    if (!companyId) {
+      this.logger.error(`Company ID is missing`)
+      throw new UnprocessableEntityException('Company ID is required')
+    }
 
+    let content
     try {
-      content = await this.contentRepository.findOne(contentId)
+      content = await this.contentRepository.findOne(contentId, companyId)
     } catch (error) {
-      this.logger.error(`Database error while fetching content: ${error}`)
-      throw new NotFoundException(`Database error: ${error}`)
+      this.logger.error(`Database error while fetching content: ${error.message}`)
+      throw new NotFoundException('An error occurred while fetching content')
     }
 
     if (!content) {
       this.logger.warn(`Content not found for id=${contentId}`)
-      throw new NotFoundException(`Content not found: ${contentId}`)
+      throw new NotFoundException('Content not found')
     }
 
-    const filePath = content.url ? content.url : undefined
+    const filePath = content.url ?? undefined
     let bytes = 0
 
     try {
-      bytes = fs.existsSync(filePath) ? fs.statSync(filePath).size : 0
+      if (filePath && this.isValidPath(filePath) && fs.existsSync(filePath)) {
+        bytes = fs.statSync(filePath).size
+      } else if (filePath && !this.isValidPath(filePath)) {
+        this.logger.warn(`Invalid file path: ${filePath}`)
+      }
     } catch (error) {
-      this.logger.error(`File system error: ${error}`)
+      this.logger.error(`File system error: ${error.message}`)
     }
 
-    const url = this.generateSignedUrl(content.url || '')
+    const url = this.validateUrl(content.url || '') ? this.generateSignedUrl(content.url || '') : ''
+    if (!this.validateUrl(content.url || '')) {
+      this.logger.warn(`Invalid URL: ${content.url}`)
+    }
 
     if (!content.type) {
       this.logger.warn(`Missing content type for ID=${contentId}`)
       throw new BadRequestException('Content type is missing')
     }
 
-    if (['pdf', 'image', 'video', 'link'].includes(content.type)) {
-      switch (content.type) {
-        case 'pdf':
-          return {
-            id: content.id,
-            title: content.title,
-            cover: content.cover,
-            created_at: content.created_at,
-            description: content.description,
-            total_likes: content.total_likes,
-            type: 'pdf',
-            url,
-            allow_download: true,
-            is_embeddable: false,
-            format: 'pdf',
-            bytes,
-            metadata: {
-              author: 'Unknown',
-              pages: Math.floor(bytes / 50000) || 1,
-              encrypted: false,
-            },
-          }
-        case 'image':
-          return {
-            id: content.id,
-            title: content.title,
-            cover: content.cover,
-            created_at: content.created_at,
-            description: content.description,
-            total_likes: content.total_likes,
-            type: 'image',
-            url,
-            allow_download: true,
-            is_embeddable: true,
-            format: path.extname(content.url || '').slice(1) || 'jpg',
-            bytes,
-            metadata: { resolution: '1920x1080', aspect_ratio: '16:9' },
-          }
-        case 'video':
-          return {
-            id: content.id,
-            title: content.title,
-            cover: content.cover,
-            created_at: content.created_at,
-            description: content.description,
-            total_likes: content.total_likes,
-            type: 'video',
-            url,
-            allow_download: false,
-            is_embeddable: true,
-            format: path.extname(content.url || '').slice(1) || 'mp4',
-            bytes,
-            metadata: { duration: Math.floor(bytes / 100000) || 10, resolution: '1080p' },
-          }
-        case 'link':
-          return {
-            id: content.id,
-            title: content.title,
-            cover: content.cover,
-            created_at: content.created_at,
-            description: content.description,
-            total_likes: content.total_likes,
-            type: 'link',
-            url: content.url || 'http://default.com',
-            allow_download: false,
-            is_embeddable: true,
-            format: null,
-            bytes: 0,
-            metadata: { trusted: content.url?.includes('https') || false },
-          }
-      }
+    if (!contentTypeEnumList.includes(content.type)) {
+      this.logger.warn(`Unsupported content type for ID=${content.id}, type=${content.type}`)
+      throw new BadRequestException(`Unsupported content type: ${content.type}`)
     }
 
-    this.logger.warn(`Unsupported content type for ID=${contentId}, type=${content.type}`)
-    throw new BadRequestException(`Unsupported content type: ${content.type}`)
+    return ContentFactory.returnContentByType(content.type, content, { url, bytes }, this.logger)
+  }
+
+  private isValidPath(filePath: string): boolean {
+    const basePath = '/static/'
+    const normalizedPath = path.normalize(filePath)
+    return normalizedPath.startsWith(path.resolve(basePath))
+  }
+
+  private validateUrl(url: string): boolean {
+    try {
+      const parsedUrl = new URL(url)
+      return ['http:', 'https:'].includes(parsedUrl.protocol)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      this.logger.warn(`Invalid URL format: ${url}`)
+      return false
+    }
   }
 
   private generateSignedUrl(originalUrl: string): string {
     const expires = Math.floor(Date.now() / 1000) + this.expirationTime
-    return `${originalUrl}?expires=${expires}&signature=${Math.random().toString(36).substring(7)}`
+    const signature = crypto
+      .createHmac('sha256', process.env.SECRET_KEY || 'default-secret-key')
+      .update(`${originalUrl}${expires}`)
+      .digest('hex')
+    return `${originalUrl}?expires=${expires}&signature=${signature}`
   }
 }

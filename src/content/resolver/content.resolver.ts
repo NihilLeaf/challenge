@@ -12,8 +12,18 @@ export class ContentResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => ProvisionDto)
-  provision(@Args('content_id') contentId: string, @Context('req') req): Promise<ProvisionDto> {
-    this.logger.log(`Provisioning content=${contentId} to user=${req.user.id}`)
-    return this.contentService.provision(contentId)
+  async provision(
+    @Args('content_id') contentId: string,
+    @Context('req') req,
+  ): Promise<ProvisionDto> {
+    const userId = req.user?.id
+    const companyId = req.user?.company?.id
+
+    if (!userId || !companyId) {
+      throw new Error('User ID or Company ID is missing in the context')
+    }
+
+    this.logger.log(`Provisioning content=${contentId} to user=${userId} and company=${companyId}`)
+    return this.contentService.provision(contentId, companyId)
   }
 }

@@ -6,10 +6,16 @@ import { Content } from 'src/content/entity'
 export class ContentRepository {
   constructor(private readonly dataSource: DataSource) {}
 
-  async findOne(contentId: string): Promise<Content | null> {
-    const [content] = await this.dataSource.query<Content[]>(
-      `SELECT * FROM contents WHERE id = '${contentId}' AND deleted_at IS NULL LIMIT 1`,
-    )
+  async findOne(contentId: string, company_id: string): Promise<Content | null> {
+    const content = await this.dataSource.getRepository(Content).findOne({
+      where: {
+        id: contentId,
+        company_id: company_id,
+      },
+      relations: {
+        text_content: true,
+      },
+    })
 
     return content || null
   }
