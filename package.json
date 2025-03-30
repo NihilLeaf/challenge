@@ -14,7 +14,6 @@
     "db:create_migration": "cross-env-shell NODE_PATH=. typeorm migration:create src/database/migration/$npm_config_name",
     "db:migrate": "cross-env NODE_ENV=development NODE_PATH=. npm run build && typeorm migration:run -d dist/database/data-source.database.js",
     "db:seed": "cross-env NODE_PATH=. ts-node test/seed.ts",
-    "db:seedTextContent": "cross-env NODE_ENV=development NODE_PATH=. ts-node test/text-seed.ts",
     "db:drop": "cross-env NODE_ENV=development NODE_PATH=. npm run build && typeorm schema:drop -d dist/database/data-source.database.js",
     "lint": "eslint .",
     "test": "cross-env NODE_PATH=. jest"

@@ -3,7 +3,7 @@ import { DataSource } from 'typeorm'
 import { User } from 'src/user/entity'
 import { Company } from 'src/company/entity'
 import { AppDataSource } from 'src/database/data-source.database'
-import { Content } from 'src/content/entity'
+import { Content, TextContent } from 'src/content/entity'
 
 export const seedDatabase = async (dataSource: DataSource) => {
   const queryRunner = dataSource.createQueryRunner()
@@ -112,7 +112,47 @@ export const seedDatabase = async (dataSource: DataSource) => {
         company: createdCompany1,
       }),
     ),
+
+    queryRunner.manager.save(
+      queryRunner.manager.create(Content, {
+        id: 'd2b5c7e4-3a9f-4d1b-bc3a-5e8b0f9a0f1c',
+        title: 'Texto De Exemplo',
+        description: 'Um texto de exemplo.',
+        url: 'http://localhost:3000/uploads/text1.txt',
+        cover: null,
+        type: 'text',
+        total_likes: 10,
+        company: createdCompany1,
+      }),
+    ),
+
+    queryRunner.manager.save(
+      queryRunner.manager.create(Content, {
+        id: 'a0e5c1f5-da2c-46d3-9776-99481496db51',
+        title: 'Texto De Exemplo 2',
+        description: 'Outro texto de exemplo.',
+        url: 'http://localhost:3000/uploads/text2.txt',
+        cover: null,
+        type: 'text',
+        total_likes: 10,
+        company: createdCompany1,
+      }),
+    ),
   ])
+
+  await queryRunner.manager.insert(TextContent, {
+    id: '81b7b1d1-4ad3-445f-b704-b29d55fee063',
+    content_id: 'd2b5c7e4-3a9f-4d1b-bc3a-5e8b0f9a0f1c',
+    text: 'Este é um texto de exemplo para o conteúdo de texto.',
+  })
+
+  await queryRunner.manager.update(
+    Content,
+    { id: 'd2b5c7e4-3a9f-4d1b-bc3a-5e8b0f9a0f1c' },
+    {
+      text_content_id: '81b7b1d1-4ad3-445f-b704-b29d55fee063',
+    },
+  )
 
   console.info('Database seeded successfully.')
   await queryRunner.release()
