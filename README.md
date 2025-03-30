@@ -7,9 +7,9 @@ Decidi criar uma factory de content juntamente com o enum para tornar o processo
 
 Além do mais, verifiquei o company id do usuário logado na query para buscar por content id, assim não sendo possível buscar conteúdos de outra empresa. E removi o SQL INJECTION da query.
 
-Criei uma criptografia para gerar a url do arquivo.
+Criei uma criptografia para gerar a url assinada do arquivo.
 
-Para adicionar o tipo de texto, criei uma tabela que relaciona com um content, sendo assim, possível colocar texto por url e também um texto salvo no banco.
+Para adicionar o tipo de texto, criei uma tabela que relaciona com um content, sendo assim, possível colocar um arquivo de texto por url e também um texto salvo direto no banco. (Aumentando as possibilidades)
 
 ### Setup do projeto de backend
 
