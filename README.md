@@ -45,15 +45,8 @@ O que você precisa para configurar o projeto:
    npm run start:dev
    ```
 6. Acesse o **Playground do GraphQL**:
-
    - 👉 [http://localhost:3000/graphql](http://localhost:3000/graphql)
-     <<<<<<< HEAD
-     =======
 
-7. Opcional: para gerar alguns contents do tipo texto de exemplo, rode:
-   - npm run db:seedTextContent
-   - Use um gerenciador de bancos de dados de sua preferência para relacionar o textContent com algum content para evidenciar o tipo texto por dado no banco, se não quiser, vai funcionar como os outros tipos, será uma url.
-     > > > > > > > 93605efe60955f4828216f27a0c440b7f577094d
 
 ### Tests
 
