@@ -33,7 +33,14 @@ export class ContentResolverUnitTest {
         {
           provide: ContentService,
           useValue: {
-            provision: jest.fn(),
+            provision: jest.fn().mockImplementation((id: string) => {
+              if (id === '00000000-0000-0000-0000-000000000000') {
+                throw new Error(
+                  'Database error while fetching content: invalid input syntax for type uuid',
+                )
+              }
+              return this.mockProvisionDto
+            }),
           },
         },
       ],
@@ -97,5 +104,19 @@ export class ContentResolverUnitTest {
     await expect(
       this.contentResolver.provision('4372ebd1-2ee8-4501-9ed5-549df46d0eb0', req),
     ).rejects.toThrow('User ID or Company ID is missing in the context')
+  }
+
+  @test
+  async '[provision] Should throw error for invalid UUID'() {
+    const req = {
+      user: {
+        id: 'valid-user-id',
+        company: { id: 'valid-company-id' },
+      },
+    }
+
+    await expect(
+      this.contentResolver.provision('00000000-0000-0000-0000-000000000000', req),
+    ).rejects.toThrow('Database error while fetching content: invalid input syntax for type uuid')
   }
 }

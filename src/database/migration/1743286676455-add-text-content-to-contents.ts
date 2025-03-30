@@ -55,16 +55,6 @@ export class AddTextContentToContents1743286676455 implements MigrationInterface
         isNullable: true,
       }),
     )
-
-    await queryRunner.createForeignKey(
-      'contents',
-      new TableForeignKey({
-        columnNames: ['text_content_id'],
-        referencedColumnNames: ['id'],
-        referencedTableName: 'text_contents',
-        onDelete: 'SET NULL',
-      }),
-    )
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

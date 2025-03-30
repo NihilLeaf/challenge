@@ -51,7 +51,7 @@ export class AuthGuardUnitTest {
 
   @test
   async '[canActivate] Should allow access with valid token'() {
-    const mockUser = { id: '123', name: 'John Doe' } as User
+    const mockUser = { id: '123e4567-e89b-12d3-a456-426614174000', name: 'John Doe' } as User // Updated to valid UUID
     jest.spyOn(this.authService, 'validateToken').mockResolvedValue(mockUser)
 
     const mockContext = this.createMockContext()

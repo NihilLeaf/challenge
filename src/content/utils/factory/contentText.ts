@@ -11,7 +11,7 @@ export class ContentText extends Content implements IContentFactory {
     return {
       ...content,
       ...additionalData,
-      textContent: content.text_content?.text ?? '',
+      textContent: content?.text_content?.text ?? null,
       allow_download: false,
       is_embeddable: false,
       format: 'text/plain',

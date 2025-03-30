@@ -398,4 +398,13 @@ export class ContentServiceUnitTest {
       this.contentService.provision('4372ebd1-2ee8-4501-9ed5-549df46d0eb0', 'test-company-id'),
     ).rejects.toThrow(BadRequestException)
   }
+
+  @test
+  async '[provision] Should throw BadRequestException for invalid content ID format'() {
+    const invalidId = 'non-existent-id'
+
+    await expect(this.contentService.provision(invalidId, 'test-company-id')).rejects.toThrow(
+      NotFoundException,
+    )
+  }
 }
