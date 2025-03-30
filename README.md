@@ -4,7 +4,7 @@ O projeto está feito em NestJs, TypeOrm e Graphql.
 
 ### Decisões
 Decidi criar uma factory de content juntamente com o enum para tornar o processo de adição de novos tipos de conteúdo muito mais fácil.
-Além do mais, verifiquei o company id do usuário logado na query para buscar por content id, assim não sendo possível buscar conteúdos de outra empresa.
+Além do mais, verifiquei o company id do usuário logado na query para buscar por content id, assim não sendo possível buscar conteúdos de outra empresa. E removi o SQL INJECTION da query.
 Criei uma criptografia para gerar a url do arquivo.
 Para adicionar o tipo de texto, criei uma tabela que relaciona com um content, sendo assim, possível colocar texto por url e também um texto salvo no banco.
 
