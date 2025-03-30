@@ -2,8 +2,9 @@ import * as path from 'path'
 import { ProvisionDto } from 'src/content/dto'
 import { Content } from 'src/content/entity'
 import IAdditionalDataReturn from 'src/content/utils/interface/additionalDataReturn.interface'
+import { IContentFactory } from 'src/content/utils/interface/contentFactory.interface'
 
-export class ContentImage extends Content {
+export class ContentImage extends Content implements IContentFactory {
   static async returnContentByType(
     content: Content,
     additionalDataReturn: IAdditionalDataReturn,

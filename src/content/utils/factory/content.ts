@@ -8,8 +8,9 @@ import { ContentPdf } from 'src/content/utils/factory/contentPdf'
 import { ContentText } from 'src/content/utils/factory/contentText'
 import { ContentVideo } from 'src/content/utils/factory/contentVideo'
 import IAdditionalDataReturn from 'src/content/utils/interface/additionalDataReturn.interface'
+import { IContentFactory } from 'src/content/utils/interface/contentFactory.interface'
 
-export class ContentFactory extends Content {
+export class ContentFactory extends Content implements IContentFactory {
   static async returnContentByType(
     type: contentTypeEnum,
     content: Content,

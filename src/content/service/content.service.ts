@@ -59,9 +59,6 @@ export class ContentService {
     }
 
     const url = this.validateUrl(content.url || '') ? this.generateSignedUrl(content.url || '') : ''
-    if (!this.validateUrl(content.url || '')) {
-      this.logger.warn(`Invalid URL: ${content.url}`)
-    }
 
     if (!content.type) {
       this.logger.warn(`Missing content type for ID=${contentId}`)
