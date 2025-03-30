@@ -3,7 +3,9 @@ Trata-se de uma api que provisiona conteúdos de diversos tipos.
 O projeto está feito em NestJs, TypeOrm e Graphql.
 
 ### Decisões
-Decidi criar uma factory de content juntamente com o enum para tornar o processo de adição de novos tipos de conteúdo muito mais fácil.
+Decidi criar uma factory de content juntamente com o enum para tornar o processo de adição de novos tipos de conteúdo muito mais fácil e
+respeitar alguns princípios do SOLID. (No momento, está como um strategy. No entanto, pensando em queries de criação, daria pra criar um setter no contentFactory e criar objetos de tipos diferentes muito
+mais tranquilo.) De qualquer forma, a nomeclatura desse Content poderia mudar também.
 
 Além do mais, verifiquei o company id do usuário logado na query para buscar por content id, assim não sendo possível buscar conteúdos de outra empresa. E removi o SQL INJECTION da query.
 
@@ -45,6 +47,7 @@ O que você precisa para configurar o projeto:
   
 7. Opcional: para gerar alguns contents do tipo texto de exemplo, rode:
    - npm run db:seedTextContent
+   - Use um gerenciador de bancos de dados de sua preferência para relacionar o textContent com algum content para evidenciar o tipo texto por dado no banco, se não quiser, vai funcionar como os outros tipos, será uma url.
 
 ### Tests
 
